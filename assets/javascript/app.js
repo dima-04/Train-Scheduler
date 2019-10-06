@@ -12,36 +12,37 @@ var firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 var database = firebase.database();
 
-
-// database ref(same as the train) on("value", function(snapshot))
-database.ref("train/").on("child_added", function (childSnapshot) {
-
+function loadData() {
   var table = $("#train-table");
+  table.empty();
+  database.ref("train/").on("child_added", function (childSnapshot) {
+    var trainRow = $("<tr>");
+    var trainNameTd = $("<td>");
+    trainNameTd.text(childSnapshot.val().trainName);
+    trainRow.append(trainNameTd);
 
-  var trainRow = $("<tr>");
-  var trainNameTd = $("<td>");
-  trainNameTd.text(childSnapshot.val().trainName);
-  trainRow.append(trainNameTd);
+    var destinationTd = $("<td>");
+    destinationTd.text(childSnapshot.val().destination);
+    trainRow.append(destinationTd);
 
-  var destinationTd = $("<td>");
-  destinationTd.text(childSnapshot.val().destination);
-  trainRow.append(destinationTd);
+    var frequencyTd = $("<td>");
+    frequencyTd.text(childSnapshot.val().frequency);
+    trainRow.append(frequencyTd);
 
-  var frequencyTd = $("<td>");
-  frequencyTd.text(childSnapshot.val().frequency);
-  trainRow.append(frequencyTd);
+    var nextTrain = findNextArrival(childSnapshot.val().firstTrain, childSnapshot.val().frequency);
+    var nextTrainTd = $("<td>");
+    nextTrainTd.text(nextTrain.format('LT'));
+    trainRow.append(nextTrainTd);
 
-  var nextTrain = findNextArrival(childSnapshot.val().firstTrain, childSnapshot.val().frequency);
-  var nextTrainTd = $("<td>");
-  nextTrainTd.text(nextTrain.format('LT'));
-  trainRow.append(nextTrainTd);
+    var minuteAway = nextTrain.diff(moment(), "minutes");
+    var minuteAwayTd = $("<td>");
+    minuteAwayTd.text(minuteAway);
+    trainRow.append(minuteAwayTd);
+    table.append(trainRow);
+  });
+}
 
-var minuteAway= nextTrain.diff(moment(),"minutes");
-var minuteAwayTd = $("<td>");
-minuteAwayTd.text(minuteAway);
-trainRow.append(minuteAwayTd);
-  table.append(trainRow);
-});
+
 
 function findNextArrival(firstTime, tFrequency) {
   // First Time (pushed back 1 year to make sure it comes before current time)
@@ -59,7 +60,9 @@ function findNextArrival(firstTime, tFrequency) {
 
   return nextTrain;
 }
+setInterval(loadData, 60000);
 
+loadData();
 $("#click-button").on("click", function (event) {
   event.preventDefault();
 
