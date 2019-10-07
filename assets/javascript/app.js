@@ -16,7 +16,23 @@ function loadData() {
   var table = $("#train-table");
   table.empty();
   database.ref("train/").on("child_added", function (childSnapshot) {
+    
     var trainRow = $("<tr>");
+    var edit = $("<td>");
+    var editIcon = $("<i>");
+    editIcon.addClass("fas");
+    editIcon.addClass("fa-edit");
+    edit.append(editIcon);
+    trainRow.append(edit);
+    var deleteTd = $("<td>");
+    var deleteIcon = $("<i>");
+    deleteIcon.addClass("fas");
+    deleteIcon.addClass("fa-trash");
+    deleteIcon.addClass("remove");
+    deleteIcon.attr("data-key",childSnapshot.key);
+    deleteTd.append(deleteIcon);
+    trainRow.append(deleteTd);
+
     var trainNameTd = $("<td>");
     trainNameTd.text(childSnapshot.val().trainName);
     trainRow.append(trainNameTd);
@@ -41,7 +57,12 @@ function loadData() {
     table.append(trainRow);
   });
 }
-
+function deleteData(){
+  var key=$(this).attr("data-key");
+  firebase.database().ref('train/'+ key).remove();   
+  loadData(); 
+}
+$(document).on("click",".remove",deleteData);
 
 
 function findNextArrival(firstTime, tFrequency) {
